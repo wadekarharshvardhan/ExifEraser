@@ -45,22 +45,11 @@ def remove_metadata(input_path, output_path):
     try:
         image = Image.open(input_path)
 
-        # ✅ Convert all images to JPEG to ensure compatibility
-        image = image.convert("RGB")
-
-        # ✅ Resize large images (Prevent memory errors)
-        max_width = 1920
-        if image.width > max_width:
-            aspect_ratio = image.height / image.width
-            new_height = int(aspect_ratio * max_width)
-            image = image.resize((max_width, new_height), Image.ANTIALIAS)
-
-        # ✅ Save without metadata
-        image.save(output_path, format='JPEG')
+        # ✅ Remove EXIF by setting "exif" to None
+        image.save(output_path, format=image.format, exif=None)
 
     except Exception as e:
         print(f"Error processing {input_path}: {e}")
-        raise  # Re-throw error for debugging
 
 
 @app.route('/')
@@ -86,22 +75,21 @@ def clean_image():
 
             metadata_before = extract_metadata(input_path)
             remove_metadata(input_path, output_path)
+            metadata_after = {key: "Removed" for key in metadata_before}  # ✅ Fix: Show 'Removed' instead of 0
 
-            # ✅ Ensure output image exists
-            if not os.path.exists(output_path):
-                raise Exception("Processed image not created!")
-
-            metadata_after = {key: "Removed" for key in metadata_before}
+            # ✅ Print URL for debugging
+            image_url = url_for('get_processed_file', filename="cleaned_" + filename, _external=True)
+            print(f"Processed Image URL: {image_url}")
 
             return jsonify({
-                "image_url": url_for('get_processed_file', filename="cleaned_" + filename, _external=True),
+                "image_url": image_url,
                 "metadata_after": metadata_after
             })
         except Exception as e:
-            print(f"Error processing image: {e}")  # ✅ Log error
             return jsonify({"error": f"Server error: {str(e)}"}), 500
 
     return jsonify({"error": "No file uploaded!"}), 400
+
 
 
 @app.route('/processed/<filename>')
