@@ -110,6 +110,11 @@
         }
     </style>
     <script>
+
+        fetch("https://image-meta-remover.onrender.com/", {
+    method: "POST",
+    body: formData
+})
         let selectedFile;
 
         function previewImage(event) {
