@@ -3,3 +3,4 @@ Pillow==10.2.0
 piexif==1.1.3
 uuid==1.30
 werkzeug==3.0.1
+echo -e "flask\ngunicorn" > requirements.txt
