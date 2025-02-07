@@ -44,13 +44,16 @@ def remove_metadata(input_path, output_path):
     """ Remove metadata and save a clean image. """
     try:
         image = Image.open(input_path)
+        image_without_exif = Image.new(image.mode, image.size)
+        image_without_exif.putdata(image.getdata())
 
-        # ✅ Remove EXIF by setting "exif" to None
-        image.save(output_path, format=image.format, exif=None)
+        # ✅ Fix: Ensure the correct format is used
+        image_format = image.format if image.format else 'JPEG'
+        image_without_exif.save(output_path, format=image_format)
+        print(f"✅ Cleaned image saved at: {output_path}")  # ✅ Debugging
 
     except Exception as e:
-        print(f"Error processing {input_path}: {e}")
-
+        print(f"❌ Error processing {input_path}: {e}")
 
 @app.route('/')
 def index():
