@@ -13,7 +13,6 @@ PROCESSED_FOLDER = 'processed'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-
 def extract_metadata(image_path):
     """ Extract metadata from an image file. """
     try:
@@ -36,7 +35,6 @@ def extract_metadata(image_path):
     except Exception:
         return {"Error": "No metadata found"}
 
-
 def remove_metadata(input_path, output_path):
     """ Remove metadata and save a clean image. """
     try:
@@ -48,11 +46,9 @@ def remove_metadata(input_path, output_path):
     except Exception as e:
         print(f"Error processing {input_path}: {e}")
 
-
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
-
 
 @app.route('/clean', methods=['POST'])
 def clean_image():
@@ -77,11 +73,9 @@ def clean_image():
 
     return jsonify({"error": "No file uploaded!"})
 
-
 @app.route('/processed/<filename>')
 def get_processed_file(filename):
     return send_file(os.path.join(PROCESSED_FOLDER, filename))
-
 
 if __name__ == '__main__':
     app.run(debug=True)
