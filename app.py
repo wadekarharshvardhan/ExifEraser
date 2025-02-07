@@ -75,21 +75,22 @@ def clean_image():
 
             metadata_before = extract_metadata(input_path)
             remove_metadata(input_path, output_path)
-            metadata_after = {key: "Removed" for key in metadata_before}  # ✅ Fix: Show 'Removed' instead of 0
 
-            # ✅ Print URL for debugging
-            image_url = url_for('get_processed_file', filename="cleaned_" + filename, _external=True)
-            print(f"Processed Image URL: {image_url}")
+            if not os.path.exists(output_path):
+                print("❌ Error: Output file was not created!")  # ✅ Debugging
+                return jsonify({"error": "File processing failed!"}), 500
+
+            metadata_after = {key: "Removed" for key in metadata_before}
 
             return jsonify({
-                "image_url": image_url,
+                "image_url": url_for('get_processed_file', filename="cleaned_" + filename, _external=True),
                 "metadata_after": metadata_after
             })
         except Exception as e:
+            print(f"❌ Server error: {e}")  # ✅ Debugging
             return jsonify({"error": f"Server error: {str(e)}"}), 500
 
     return jsonify({"error": "No file uploaded!"}), 400
-
 
 
 @app.route('/processed/<filename>')
