@@ -14,7 +14,7 @@ A simple web application to remove metadata from images and allow downloading th
 
 Step 1: Clone the Repository
 
-https://github.com/wadekarharshvardhan/image-meta-remover.git
+git clone https://github.com/wadekarharshvardhan/image-meta-remover.git
 
 Step 2: Set Up a Virtual Environment (Optional)
 
