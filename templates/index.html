@@ -8,6 +8,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
 
     <style>
+        html, body {
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden; /* ✅ Prevents horizontal scroll */
+    }
+    .container {
+    min-height: 100vh;  /* ✅ Ensure full viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(to right, #303030, #353535);
@@ -82,7 +94,24 @@
             display: flex;
             align-items: center;
         }
-        .github-link img { width: 24px; height: 24px; margin-right: 8px; }
+        .github-link {
+    margin-top: 20px;
+    text-align: center; /* ✅ Center the GitHub link */
+}
+
+.github-link img {
+    width: 40px; /* ✅ Adjust size */
+    margin-right:.3cm;
+    height: auto;
+    display: inline-block;
+}
+.github-link a {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+}
     </style>
 
     <script>
@@ -128,15 +157,17 @@
                 body: formData
             })
             .then(response => response.json())
-            .then(data => {
-                document.getElementById('loading').style.display = 'none';
-                if (data.image_url) {
-                    document.getElementById('cleanedImage').src = data.image_url;
-                    document.getElementById('cleanedImage').style.display = 'block';
-                    document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
-                    document.getElementById('downloadLink').innerHTML = `<a href="${data.image_url}" download>Download Cleaned Image</a>`;
-                }
-            })
+           .then(data => {
+    document.getElementById('loading').style.display = 'none';
+    if (data.image_url) {
+        const timestamp = new Date().getTime();  // ✅ Cache Busting
+        document.getElementById('cleanedImage').src = `${data.image_url}?t=${timestamp}`;
+        document.getElementById('cleanedImage').style.display = 'block';
+        document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
+        document.getElementById('downloadLink').innerHTML = `<a href="${data.image_url}" download>Download Cleaned Image</a>`;
+    }
+})
+
             .catch(error => {
                 document.getElementById('loading').style.display = 'none';
                 console.error('Error:', error);
@@ -161,7 +192,7 @@
 
     <div id="dropArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
         Drag & Drop Image Here or
-        <input type="file" id="fileInput" onchange="previewImage(event)">
+        <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp" onchange="previewImage(event)">
     </div>
 
     <h3>Original Image:</h3>
