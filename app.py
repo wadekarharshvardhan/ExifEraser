@@ -99,7 +99,11 @@ def clean_image():
 @app.route('/processed/<filename>')
 def get_processed_file(filename):
     """ Serve cleaned images to frontend """
-    return send_file(os.path.join(PROCESSED_FOLDER, filename))
+    file_path = os.path.join(PROCESSED_FOLDER, filename)
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    print(f"❌ Error: File {filename} not found!")  # ✅ Debugging
+    return jsonify({"error": "File not found!"}), 404
 
 
 if __name__ == '__main__':
