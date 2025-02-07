@@ -44,16 +44,18 @@ def remove_metadata(input_path, output_path):
     """ Remove metadata and save a clean image. """
     try:
         image = Image.open(input_path)
-        image_without_exif = Image.new(image.mode, image.size)
-        image_without_exif.putdata(image.getdata())
+        data = list(image.getdata())
 
-        # ✅ Fix: Ensure the correct format is used
+        image_without_exif = Image.new(image.mode, image.size)
+        image_without_exif.putdata(data)
+
+        # Ensure correct format
         image_format = image.format if image.format else 'JPEG'
         image_without_exif.save(output_path, format=image_format)
-        print(f"✅ Cleaned image saved at: {output_path}")  # ✅ Debugging
+        print(f"✅ Cleaned image saved at: {output_path}")  # Debugging
 
     except Exception as e:
-        print(f"❌ Error processing {input_path}: {e}")
+        print(f"❌ Error processing {input_path}: {e}")  # Debugging
 
 @app.route('/')
 def index():
@@ -75,12 +77,13 @@ def clean_image():
             output_path = os.path.join(PROCESSED_FOLDER, "cleaned_" + filename)
 
             uploaded_file.save(input_path)
+            print(f"✅ File saved at: {input_path}")  # Debugging
 
             metadata_before = extract_metadata(input_path)
             remove_metadata(input_path, output_path)
 
             if not os.path.exists(output_path):
-                print("❌ Error: Output file was not created!")  # ✅ Debugging
+                print("❌ Error: Processed file was not created!")  # Debugging
                 return jsonify({"error": "File processing failed!"}), 500
 
             metadata_after = {key: "Removed" for key in metadata_before}
@@ -90,7 +93,7 @@ def clean_image():
                 "metadata_after": metadata_after
             })
         except Exception as e:
-            print(f"❌ Server error: {e}")  # ✅ Debugging
+            print(f"❌ Server error: {e}")  # Debugging
             return jsonify({"error": f"Server error: {str(e)}"}), 500
 
     return jsonify({"error": "No file uploaded!"}), 400
@@ -102,7 +105,7 @@ def get_processed_file(filename):
     file_path = os.path.join(PROCESSED_FOLDER, filename)
     if os.path.exists(file_path):
         return send_file(file_path)
-    print(f"❌ Error: File {filename} not found!")  # ✅ Debugging
+    print(f"❌ Error: File {filename} not found!")  # Debugging
     return jsonify({"error": "File not found!"}), 404
 
 
