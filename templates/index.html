@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Metadata Cleaner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>  <!-- ✅ Extract Metadata Instantly -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #303030, #353535);
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #525252; /* Updated color */
+            color: #fff;
+            cursor: pointer;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        img {
+            max-width: 300px;
+            margin: 20px auto;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: block;
+        }
+        pre {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            overflow-x: auto;
+            max-width: 80%;
+            margin: 20px auto;
+            font-family: 'Courier New', Courier, monospace; /* Change font for metadata */
+        }
+        #downloadLink a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #downloadLink a:hover {
+            background-color: #2980b9;
+        }
+        #loading {
+            display: none;
+            margin: 20px auto;
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 1em;
+        }
+        .github-link {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .github-link a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .github-link img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+    </style>
+    <script>
+        let selectedFile;
+
+        function previewImage(event) {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                extractMetadata(selectedFile);
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        function extractMetadata(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                EXIF.getData(file, function() {
+                    let metadata = EXIF.getAllTags(this);
+                    document.getElementById('metadataBefore').innerText = JSON.stringify(metadata, null, 2) || "No Metadata Found";
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function cleanMetadata() {
+            if (!selectedFile) {
+                alert("Please select an image first!");
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            let formData = new FormData();
+            formData.append('image', selectedFile);
+
+            fetch('/clean', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.image_url) {
+                    document.getElementById('cleanedImage').src = data.image_url;
+                    document.getElementById('cleanedImage').style.display = 'block';
+                    document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
+                    document.getElementById('downloadLink').innerHTML = `<a href="${data.image_url}" download>Download Cleaned Image</a>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                console.error('Error:', error);
+                alert("Error cleaning image metadata!");
+            });
+        }
+    </script>
+</head>
+<body>
+    <h2>ExifEraser</h2>
+    <input type="file" id="fileInput" onchange="previewImage(event)">
+
+    <h3>Original Image:</h3>
+    <img id="imagePreview" style="display: none;">
+
+    <h3>Metadata Before:</h3>
+    <pre id="metadataBefore">No metadata available</pre>
+
+    <button onclick="cleanMetadata()">Clean Metadata</button>
+
+    <div id="loading"></div>
+
+    <h3>Cleaned Image:</h3>
+    <img id="cleanedImage" style="display: none;">
+
+    <h3>Metadata After:</h3>
+    <pre id="metadataAfter">No metadata available</pre>
+
+    <div id="downloadLink"></div>
+
+    <div class="github-link">
+        <a href="https://github.com/your-org/your-project" target="_blank">
+            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Logo">
+            See this project on GitHub
+        </a>
+    </div>
+
+    <div class="footer">Made with ❤️ by Harshvardhan</div>
+</body>
+</html>
