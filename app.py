@@ -4,7 +4,7 @@ import base64
 import uuid
 import piexif
 from flask_cors import CORS
-from PIL import Image
+from PIL import Image, ExifTags
 
 app = Flask(__name__)
 CORS(app)  # ✅ Enable CORS for all routes
@@ -35,7 +35,8 @@ def extract_metadata(image_path):
                 metadata[tag_name] = tag_value
 
         return metadata
-    except Exception:
+    except Exception as e:
+        print(f"Error extracting metadata: {e}")
         return {"Error": "No metadata found"}
 
 
@@ -43,17 +44,23 @@ def remove_metadata(input_path, output_path):
     """ Remove metadata and save a clean image. """
     try:
         image = Image.open(input_path)
-        data = list(image.getdata())
 
-        image_without_exif = Image.new(image.mode, image.size)
-        image_without_exif.putdata(data)
+        # ✅ Convert all images to JPEG to ensure compatibility
+        image = image.convert("RGB")
 
-        # ✅ Keep original image format
-        format = image.format if image.format else 'JPEG'
-        image_without_exif.save(output_path, format=format)
+        # ✅ Resize large images (Prevent memory errors)
+        max_width = 1920
+        if image.width > max_width:
+            aspect_ratio = image.height / image.width
+            new_height = int(aspect_ratio * max_width)
+            image = image.resize((max_width, new_height), Image.ANTIALIAS)
+
+        # ✅ Save without metadata
+        image.save(output_path, format='JPEG')
 
     except Exception as e:
         print(f"Error processing {input_path}: {e}")
+        raise  # Re-throw error for debugging
 
 
 @app.route('/')
@@ -79,13 +86,19 @@ def clean_image():
 
             metadata_before = extract_metadata(input_path)
             remove_metadata(input_path, output_path)
-            metadata_after = {key: "Removed" for key in metadata_before}  # ✅ Fix: Show 'Removed' instead of 0
+
+            # ✅ Ensure output image exists
+            if not os.path.exists(output_path):
+                raise Exception("Processed image not created!")
+
+            metadata_after = {key: "Removed" for key in metadata_before}
 
             return jsonify({
                 "image_url": url_for('get_processed_file', filename="cleaned_" + filename, _external=True),
                 "metadata_after": metadata_after
             })
         except Exception as e:
+            print(f"Error processing image: {e}")  # ✅ Log error
             return jsonify({"error": f"Server error: {str(e)}"}), 500
 
     return jsonify({"error": "No file uploaded!"}), 400
