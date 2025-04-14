@@ -43,19 +43,28 @@ def extract_metadata(image_path):
 def remove_metadata(input_path, output_path):
     """ Remove metadata and save a clean image. """
     try:
+        print(f"Opening image: {input_path}")  # Debugging
         image = Image.open(input_path)
         data = list(image.getdata())
+        print(f"Image data loaded successfully.")  # Debugging
 
         image_without_exif = Image.new(image.mode, image.size)
         image_without_exif.putdata(data)
+        print(f"Image without EXIF created.")  # Debugging
 
         # Ensure correct format
         image_format = image.format if image.format else 'JPEG'
+        if image_format not in ['JPEG', 'PNG']:
+            image_format = 'JPEG'  # Default to JPEG if unsupported format
+        print(f"Image format determined: {image_format}")  # Debugging
+
         image_without_exif.save(output_path, format=image_format)
         print(f"✅ Cleaned image saved at: {output_path}")  # Debugging
 
     except Exception as e:
         print(f"❌ Error processing {input_path}: {e}")  # Debugging
+        raise e
+
 
 @app.route('/')
 def index():
@@ -80,10 +89,12 @@ def clean_image():
             print(f"✅ File saved at: {input_path}")  # Debugging
 
             metadata_before = extract_metadata(input_path)
+            print(f"Metadata before cleaning: {metadata_before}")  # Debugging
+
             remove_metadata(input_path, output_path)
 
             if not os.path.exists(output_path):
-                print("❌ Error: Processed file was not created!")  # Debugging
+                print(f"❌ Error: Processed file was not created at {output_path}!")  # Debugging
                 return jsonify({"error": "File processing failed!"}), 500
 
             metadata_after = {key: "Removed" for key in metadata_before}
@@ -101,11 +112,16 @@ def clean_image():
 
 @app.route('/processed/<filename>')
 def get_processed_file(filename):
-    """ Serve cleaned images to frontend """
+    """ Serve cleaned images to frontend with a download prompt """
     file_path = os.path.join(PROCESSED_FOLDER, filename)
+    print(f"Looking for file at: {file_path}")  # Debugging
     if os.path.exists(file_path):
-        return send_file(file_path)
-    print(f"❌ Error: File {filename} not found!")  # Debugging
+        return send_file(
+            file_path,
+            as_attachment=True,  # This forces the browser to download the file
+            download_name=filename  # Suggests the filename for the download
+        )
+    print(f"❌ Error: File {filename} not found at {file_path}!")  # Debugging
     return jsonify({"error": "File not found!"}), 404
 
 
