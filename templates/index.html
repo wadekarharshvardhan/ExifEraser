@@ -8,18 +8,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
 
     <style>
+        /* Styling remains unchanged */
         html, body {
-    height: 100%;
-    margin: 0;
-    overflow-x: hidden; /* ✅ Prevents horizontal scroll */
-    }
-    .container {
-    min-height: 100vh;  /* ✅ Ensure full viewport height */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
+            height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(to right, #303030, #353535);
@@ -86,7 +87,9 @@
         }
         #downloadLink a:hover { background-color: #2980b9; }
         .footer { margin-top: 40px; font-size: 1em; }
-        .github-link { margin-top: 20px; }
+        .github-link { margin-top: 20px; 
+        text-align: center;
+    margin-right: 13.5cm;}
         .github-link a {
             color: #fff;
             text-decoration: none;
@@ -94,24 +97,12 @@
             display: flex;
             align-items: center;
         }
-        .github-link {
-    margin-top: 20px;
-    text-align: center; /* ✅ Center the GitHub link */
-}
-
-.github-link img {
-    width: 40px; /* ✅ Adjust size */
-    margin-right:.3cm;
-    height: auto;
-    display: inline-block;
-}
-.github-link a {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    font-weight: bold;
-    color: #fff;
-}
+        .github-link img {
+            width: 40px;
+            margin-right: .3cm;
+            height: auto;
+            display: inline-block;
+        }
     </style>
 
     <script>
@@ -152,27 +143,34 @@
             let formData = new FormData();
             formData.append('image', selectedFile);
 
-            fetch('https://image-meta-remover.onrender.com/clean', {
+            fetch('http://127.0.0.1:10000/clean', { // Updated to local Flask server
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                },
             })
-            .then(response => response.json())
-           .then(data => {
-    document.getElementById('loading').style.display = 'none';
-    if (data.image_url) {
-        const timestamp = new Date().getTime();  // ✅ Cache Busting
-        document.getElementById('cleanedImage').src = `${data.image_url}?t=${timestamp}`;
-        document.getElementById('cleanedImage').style.display = 'block';
-        document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
-        document.getElementById('downloadLink').innerHTML = `<a href="${data.image_url}" download>Download Cleaned Image</a>`;
-    }
-})
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('loading').style.display = 'none';
 
-            .catch(error => {
-                document.getElementById('loading').style.display = 'none';
-                console.error('Error:', error);
-                alert("Error cleaning image metadata!");
-            });
+                    // Display cleaned image
+                    const cleanedImage = document.getElementById('cleanedImage');
+                    cleanedImage.src = data.image_url;
+                    cleanedImage.style.display = 'block';
+
+                    // Display metadata after cleaning
+                    document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
+
+                    // Provide download link
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.innerHTML = `<a href="http://127.0.0.1:10000/processed/${data.image_url.split('/').pop()}" download>Download Cleaned Image</a>`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                });
         }
 
         // Drag and Drop Upload
@@ -185,6 +183,17 @@
         function handleDragOver(event) {
             event.preventDefault();
         }
+    </script>
+    <script>
+        // Reset input fields on page load
+        window.onload = function () {
+            document.getElementById('fileInput').value = ''; // Reset file input
+            document.getElementById('imagePreview').style.display = 'none'; // Hide image preview
+            document.getElementById('metadataBefore').innerText = 'No metadata available'; // Reset metadata before
+            document.getElementById('metadataAfter').innerText = 'No metadata available'; // Reset metadata after
+            document.getElementById('cleanedImage').style.display = 'none'; // Hide cleaned image
+            document.getElementById('downloadLink').innerHTML = ''; // Clear download link
+        };
     </script>
 </head>
 <body>
@@ -214,7 +223,7 @@
     <div id="downloadLink"></div>
 
     <div class="github-link">
-        <a href="https://shorturl.at/E21wF" target="_blank">
+        <a href="https://github.com/wadekarharshvardhan/image-meta-remover" target="#">
             <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Logo">
             See this project on GitHub
         </a>
