@@ -7,7 +7,7 @@ from flask_cors import CORS
 from PIL import Image, ExifTags
 
 app = Flask(__name__)
-CORS(app)  # ✅ Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}})  # ✅ Enable CORS for all routes and origins
 
 # Configure Upload Folders
 UPLOAD_FOLDER = 'uploads'
@@ -71,6 +71,11 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('static/favicon.ico')
+
+
 @app.route('/clean', methods=['POST'])
 def clean_image():
     if 'image' not in request.files:
@@ -97,7 +102,7 @@ def clean_image():
                 print(f"❌ Error: Processed file was not created at {output_path}!")  # Debugging
                 return jsonify({"error": "File processing failed!"}), 500
 
-            metadata_after = {key: "Removed" for key in metadata_before}
+            metadata_after ="Metadata removed successfully with Lossless compression."
 
             return jsonify({
                 "image_url": url_for('get_processed_file', filename="cleaned_" + filename, _external=True),
