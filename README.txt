@@ -1,59 +1,59 @@
 Image Metadata Remover
 
-Image Metadata Remover is a simple yet powerful web application that allows users to remove metadata (EXIF) from image files. The application provides a seamless interface to preview, clean, and download images free of any sensitive or identifying metadata.
+A simple and efficient web application to remove metadata (EXIF) from images. It allows users to preview images, view and clean metadata, and download the cleaned image.
 
-Live Demo: https://image-meta-remover.onrender.com
+Live Website: https://image-meta-remover.onrender.com
 Features
 
-    Preview the selected image immediately
+    Preview image immediately after selection
 
-    Display all metadata before cleaning
+    Display original metadata before cleaning
 
-    Remove EXIF metadata with a single click
+    Remove all metadata from image files
 
-    Show sanitized metadata after processing
+    Display cleaned metadata for transparency
 
-    Download the cleaned image directly
+    Download the cleaned image with one click
 
-Installation
-
-Follow the steps below to set up and run the application locally:
-1. Clone the Repository
+Getting Started
+Clone the Repository
 
 git clone https://github.com/wadekarharshvardhan/image-meta-remover.git
 cd image-meta-remover
 
-2. Create a Virtual Environment (Optional)
+Set Up Virtual Environment (Optional)
 
-# For macOS/Linux
+# macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
 
-# For Windows
+# Windows
 python -m venv venv
 venv\Scripts\activate
 
-3. Install Dependencies
+Install Dependencies
 
 pip install -r requirements.txt
 
-4. Run the Application
+Run the Application
 
 python app.py
 
-Visit http://127.0.0.1:5000 in your browser to use the application.
-Dependencies
+Visit http://127.0.0.1:5000 in your browser.
+Technologies Used
 
-The project uses the following Python libraries:
-Library	Purpose
-Flask	Web framework
-Pillow	Image processing
-piexif	EXIF metadata manipulation
-uuid	Unique file naming
+    Flask – Lightweight web framework
+
+    Pillow – Python Imaging Library
+
+    piexif – EXIF metadata manipulation
+
+    uuid – Unique filename generation
+
 License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See LICENSE for more information.
 Author
 
 Harshvardhan Wadekar
-GitHub Profile
+GitHub
