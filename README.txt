@@ -1,48 +1,59 @@
 Image Metadata Remover
 
-📌 Description
-A simple web application to remove metadata from images and allow downloading the cleaned image.
+Image Metadata Remover is a simple yet powerful web application that allows users to remove metadata (EXIF) from image files. The application provides a seamless interface to preview, clean, and download images free of any sensitive or identifying metadata.
 
-Webpage Link: https://image-meta-remover.onrender.com/
+Live Demo: https://image-meta-remover.onrender.com
+Features
 
-🔧 Features
-✅ Preview image as soon as it's selected  
-✅ Show metadata before cleaning  
-✅ Remove metadata and show cleaned image  
-✅ Display actual cleaned metadata  
-✅ Provide a download link for the cleaned image  
+    Preview the selected image immediately
 
-🚀 Installation Guide
+    Display all metadata before cleaning
 
-Step 1: Clone the Repository
+    Remove EXIF metadata with a single click
+
+    Show sanitized metadata after processing
+
+    Download the cleaned image directly
+
+Installation
+
+Follow the steps below to set up and run the application locally:
+1. Clone the Repository
 
 git clone https://github.com/wadekarharshvardhan/image-meta-remover.git
+cd image-meta-remover
 
-Step 2: Set Up a Virtual Environment (Optional)
+2. Create a Virtual Environment (Optional)
 
+# For macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+
+# For Windows
 python -m venv venv
-source venv/bin/activate  # For macOS/Linux
-venv\Scripts\activate      # For Windows
+venv\Scripts\activate
 
-Step 3: Install Dependencies
+3. Install Dependencies
 
 pip install -r requirements.txt
 
-Step 4: Run the Application
+4. Run the Application
 
 python app.py
 
-The application will be accessible at http://127.0.0.1:5000
+Visit http://127.0.0.1:5000 in your browser to use the application.
+Dependencies
 
-🛠 Dependencies
+The project uses the following Python libraries:
+Library	Purpose
+Flask	Web framework
+Pillow	Image processing
+piexif	EXIF metadata manipulation
+uuid	Unique file naming
+License
 
-    Flask: For the web framework
-    Pillow: To handle image processing
-    piexif: To manipulate EXIF metadata
-    uuid: For unique file naming
+This project is licensed under the MIT License. See the LICENSE file for more details.
+Author
 
-📜 License
-
-This project is open-source under the MIT License.
-
-Made By Harshvardhan Wadekar
+Harshvardhan Wadekar
+GitHub Profile
