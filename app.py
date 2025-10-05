@@ -5,13 +5,17 @@ import uuid
 import piexif
 from flask_cors import CORS
 from PIL import Image, ExifTags
+import tempfile
+import io
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # ✅ Enable CORS for all routes and origins
 
-# Configure Upload Folders
-UPLOAD_FOLDER = 'uploads'
-PROCESSED_FOLDER = 'processed'
+# Configure Upload Folders for Vercel (use temp directories)
+UPLOAD_FOLDER = tempfile.mkdtemp()
+PROCESSED_FOLDER = tempfile.mkdtemp()
+
+# Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
@@ -85,50 +89,53 @@ def clean_image():
 
     if uploaded_file:
         try:
-            unique_id = uuid.uuid4().hex
-            filename = unique_id + "_" + uploaded_file.filename
-            input_path = os.path.join(UPLOAD_FOLDER, filename)
-            output_path = os.path.join(PROCESSED_FOLDER, "cleaned_" + filename)
-
-            uploaded_file.save(input_path)
-            print(f"✅ File saved at: {input_path}")  # Debugging
-
-            metadata_before = extract_metadata(input_path)
-            print(f"Metadata before cleaning: {metadata_before}")  # Debugging
-
-            remove_metadata(input_path, output_path)
-
-            if not os.path.exists(output_path):
-                print(f"❌ Error: Processed file was not created at {output_path}!")  # Debugging
-                return jsonify({"error": "File processing failed!"}), 500
-
-            metadata_after ="Metadata removed successfully with Lossless compression."
+            # Process image in memory instead of saving to disk
+            image_data = uploaded_file.read()
+            
+            # Extract metadata before cleaning
+            with tempfile.NamedTemporaryFile(delete=False) as temp_input:
+                temp_input.write(image_data)
+                temp_input.flush()
+                metadata_before = extract_metadata(temp_input.name)
+            
+            # Clean the image
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Remove EXIF data
+            data = list(image.getdata())
+            image_without_exif = Image.new(image.mode, image.size)
+            image_without_exif.putdata(data)
+            
+            # Convert to bytes
+            img_io = io.BytesIO()
+            image_format = image.format if image.format else 'JPEG'
+            if image_format not in ['JPEG', 'PNG']:
+                image_format = 'JPEG'
+            
+            image_without_exif.save(img_io, format=image_format)
+            img_io.seek(0)
+            
+            # Convert to base64 for frontend display
+            img_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
+            image_url = f"data:image/{image_format.lower()};base64,{img_base64}"
+            
+            metadata_after = "Metadata removed successfully with lossless compression."
+            
+            # Clean up temp file
+            os.unlink(temp_input.name)
 
             return jsonify({
-                "image_url": url_for('get_processed_file', filename="cleaned_" + filename, _external=True),
-                "metadata_after": metadata_after
+                "image_url": image_url,
+                "metadata_after": metadata_after,
+                "filename": f"cleaned_{uploaded_file.filename}"
             })
         except Exception as e:
-            print(f"❌ Server error: {e}")  # Debugging
+            print(f"❌ Server error: {e}")
             return jsonify({"error": f"Server error: {str(e)}"}), 500
 
     return jsonify({"error": "No file uploaded!"}), 400
 
 
-@app.route('/processed/<filename>')
-def get_processed_file(filename):
-    """ Serve cleaned images to frontend with a download prompt """
-    file_path = os.path.join(PROCESSED_FOLDER, filename)
-    print(f"Looking for file at: {file_path}")  # Debugging
-    if os.path.exists(file_path):
-        return send_file(
-            file_path,
-            as_attachment=True,  # This forces the browser to download the file
-            download_name=filename  # Suggests the filename for the download
-        )
-    print(f"❌ Error: File {filename} not found at {file_path}!")  # Debugging
-    return jsonify({"error": "File not found!"}), 404
-
-
+# Main entry point for Vercel
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=10000)  # ✅ Ensure it works on Render
+    app.run(debug=True, host='0.0.0.0', port=10000)

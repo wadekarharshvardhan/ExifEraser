@@ -1,0 +1,13 @@
+{
+  "name": "exif-eraser",
+  "version": "1.0.0",
+  "description": "Privacy-friendly image metadata remover",
+  "main": "app.py",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "start": "python app.py"
+  },
+  "keywords": ["privacy", "metadata", "exif", "image"],
+  "author": "Harshvardhan",
+  "license": "MIT"
+}
