@@ -46,7 +46,7 @@
             let formData = new FormData();
             formData.append('image', selectedFile);
 
-            fetch('/clean', { // use relative endpoint so deployment host works correctly
+            fetch('https://exif-eraser-backend.onrender.com/clean', { // Connect to Render backend
                 method: 'POST',
                 body: formData,
                 headers: {
