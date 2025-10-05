@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExifEraser - Image Metadata Cleaner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@400;600&family=Roboto:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
+
+    <script>
+        // Backend API URL - Update this with your Render backend URL
+        const API_BASE_URL = 'https://your-backend-name.onrender.com';
+        
+        let selectedFile;
+
+        function previewImage(event) {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                extractMetadata(selectedFile);
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        function extractMetadata(file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                EXIF.getData(file, function() {
+                    let metadata = EXIF.getAllTags(this);
+                    document.getElementById('metadataBefore').innerText = JSON.stringify(metadata, null, 2) || "No Metadata Found";
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function cleanMetadata() {
+            if (!selectedFile) {
+                alert("Please select an image first!");
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+
+            let formData = new FormData();
+            formData.append('image', selectedFile);
+
+            fetch(`${API_BASE_URL}/clean`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    document.getElementById('loading').style.display = 'none';
+
+                    // Display cleaned image
+                    const cleanedImage = document.getElementById('cleanedImage');
+                    cleanedImage.src = data.image_url;
+                    cleanedImage.style.display = 'block';
+
+                    // Display metadata after cleaning
+                    document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
+
+                    // Provide download link
+                    const downloadLink = document.getElementById('downloadLink');
+                    // Handle base64 image data for download
+                    downloadLink.innerHTML = `<a href="${data.image_url}" download="${data.filename}">Download Cleaned Image</a>`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    alert('Error processing image. Please try again.');
+                });
+        }
+
+        // Drag and Drop Upload
+        function handleDrop(event) {
+            event.preventDefault();
+            selectedFile = event.dataTransfer.files[0];
+            previewImage({ target: { files: [selectedFile] } });
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Reset input fields on page load and initialize theme
+        window.onload = function () {
+            document.getElementById('fileInput').value = ''; // Reset file input
+            document.getElementById('imagePreview').style.display = 'none'; // Hide image preview
+            document.getElementById('metadataBefore').innerText = 'No metadata available'; // Reset metadata before
+            document.getElementById('metadataAfter').innerText = 'No metadata available'; // Reset metadata after
+            document.getElementById('cleanedImage').style.display = 'none'; // Hide cleaned image
+            document.getElementById('downloadLink').innerHTML = ''; // Clear download link
+            
+            // Initialize theme from localStorage
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        };
+    </script>
+</head>
+<body>
+  <div class="app">
+    <!-- Theme Toggle Button - Fixed Top Right -->
+    <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-icon"></span>
+    </button>
+
+    <div class="header">
+      <div class="title">
+        <div style="width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#3b82f6);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;box-shadow:0 2px 12px #2563eb33">E</div>
+        <div>
+          <h2 class="main-heading">ExifEraser</h2>
+          <div class="subtitle bold">Quickly remove image metadata — privacy-friendly, free, and lightweight.</div>
+        </div>
+      </div>
+
+      <a class="github-link bold" href="https://github.com/wadekarharshvardhan/image-meta-remover" target="_blank">
+        <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub">
+        <span class="small">View on GitHub</span>
+      </a>
+    </div>
+
+    <div class="card u-grid">
+      <div>
+        <div id="dropArea" class="drop bold" tabindex="0" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+          <div class="small accent">Drag & drop an image here, or</div>
+          <div class="file-input-wrapper">
+            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp" onchange="previewImage(event)">
+            <label for="fileInput" class="file-input-label">Choose File</label>
+          </div>
+          <div class="small accent">Supported: JPEG, PNG, WebP • Server-side size limits may apply</div>
+        </div>
+
+        <div style="margin-top:14px" class="card">
+          <div class="preview center">
+            <img id="imagePreview" style="display:none;box-shadow:0 2px 16px #2563eb22" alt="Original preview">
+          </div>
+          <h3 class="bold accent" style="margin:10px 0 6px;font-family:Montserrat,sans-serif;font-size:1.2rem">Metadata (Before)</h3>
+          <div id="metadataBefore" class="meta bold">No metadata available</div>
+
+          <div class="controls">
+            <button class="btn bold" onclick="cleanMetadata()">Clean Metadata</button>
+            <button class="btn secondary bold" onclick="window.location.reload()">Reset</button>
+            <div id="loading" style="display:none" class="loading" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card center" style="flex-direction:column; gap:10px;">
+          <div class="preview">
+            <img id="cleanedImage" style="display:none;box-shadow:0 2px 16px #10b98122" alt="Cleaned image">
+          </div>
+          <div class="download bold" id="downloadLink"></div>
+          <h3 class="bold accent" style="margin:10px 0 6px;font-family:Montserrat,sans-serif;font-size:1.2rem">Metadata (After)</h3>
+          <div id="metadataAfter" class="meta bold">No metadata available</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer bold accent">Made with ❤️ by <a href="https://wharshvardhan.vercel.app" target="_blank" class="author-link">Harshvardhan</a></div>
+  </div>
+</body>
+</html>
