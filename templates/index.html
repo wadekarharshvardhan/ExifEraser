@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ExifEraser - Image Metadata Cleaner</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@400;600&family=Roboto:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -17,8 +17,19 @@
 
             let reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreview').style.display = 'block';
+                const imagePreview = document.getElementById('imagePreview');
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                
+                // Handle mobile image sizing
+                if (window.innerWidth <= 768) {
+                    imagePreview.style.maxWidth = '100%';
+                    imagePreview.style.maxHeight = '60vh';
+                    imagePreview.style.width = 'auto';
+                    imagePreview.style.height = 'auto';
+                    imagePreview.style.objectFit = 'contain';
+                }
+                
                 extractMetadata(selectedFile);
             };
             reader.readAsDataURL(selectedFile);
@@ -62,6 +73,15 @@
                     const cleanedImage = document.getElementById('cleanedImage');
                     cleanedImage.src = data.image_url;
                     cleanedImage.style.display = 'block';
+                    
+                    // Handle mobile image sizing for cleaned image
+                    if (window.innerWidth <= 768) {
+                        cleanedImage.style.maxWidth = '100%';
+                        cleanedImage.style.maxHeight = '60vh';
+                        cleanedImage.style.width = 'auto';
+                        cleanedImage.style.height = 'auto';
+                        cleanedImage.style.objectFit = 'contain';
+                    }
 
                     // Display metadata after cleaning
                     document.getElementById('metadataAfter').innerText = JSON.stringify(data.metadata_after, null, 2);
@@ -102,6 +122,28 @@
             }
         }
 
+        // Handle window resize for responsive images
+        function handleImageResize() {
+            const images = [document.getElementById('imagePreview'), document.getElementById('cleanedImage')];
+            images.forEach(img => {
+                if (img && img.style.display !== 'none') {
+                    if (window.innerWidth <= 768) {
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '60vh';
+                        img.style.width = 'auto';
+                        img.style.height = 'auto';
+                        img.style.objectFit = 'contain';
+                    } else {
+                        img.style.maxWidth = '480px';
+                        img.style.maxHeight = 'none';
+                        img.style.width = '100%';
+                        img.style.height = 'auto';
+                        img.style.objectFit = 'cover';
+                    }
+                }
+            });
+        }
+
         // Reset input fields on page load and initialize theme
         window.onload = function () {
             document.getElementById('fileInput').value = ''; // Reset file input
@@ -117,6 +159,9 @@
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
             }
+            
+            // Add resize listener for responsive images
+            window.addEventListener('resize', handleImageResize);
         };
     </script>
 </head>
