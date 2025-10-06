@@ -2,17 +2,34 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
-      "use": "@vercel/python"
+      "src": "api/index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/clean",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "/api/index.js"
     }
-  ],
-  "env": {
-    "PYTHONPATH": "./"
-  }
+  ]
 }

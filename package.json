@@ -1,13 +1,24 @@
 {
-  "name": "exif-eraser",
+  "name": "exif-eraser-backend",
   "version": "1.0.0",
-  "description": "Privacy-friendly image metadata remover",
-  "main": "app.py",
+  "description": "Node.js backend for ExifEraser - Image metadata removal service",
+  "main": "api/index.js",
   "scripts": {
-    "build": "echo 'Build complete'",
-    "start": "python app.py"
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
+    "build": "echo 'Build complete'"
   },
-  "keywords": ["privacy", "metadata", "exif", "image"],
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.6",
+    "cors": "^2.8.5",
+    "piexifjs": "^1.0.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["image", "metadata", "exif", "privacy", "removal"],
   "author": "Harshvardhan",
   "license": "MIT"
 }

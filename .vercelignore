@@ -15,3 +15,10 @@ sample images/
 screenshots/
 .git/
 README.txt
+app.py
+requirements.txt
+Procfile
+build.sh
+frontend/
+node_modules/
+*.log
